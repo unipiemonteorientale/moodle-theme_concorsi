@@ -1,0 +1,41 @@
+#page-mod-quiz-report #attempts .c1,
+#page-mod-quiz-report #attempts .c3,
+#page-mod-quiz-report #attempts .c4,
+#page-mod-quiz-report #attempts .c5,
+#page-mod-quiz-report #attempts .c6 {
+    display: none;
+}
+
+#page-mod-quiz-report #responses .c1,
+#page-mod-quiz-report #responses .c3 {
+    display: none;
+}
+
+#page-mod-quiz-report .dataformatselector {
+    display: none;
+}
+
+#page-mod-quiz-report .questionflag,
+#page-mod-quiz-reviewquestion .questionflag,
+#page-mod-quiz-comment .questionflag,
+#page-mod-quiz-review .questionflag {
+    display: none;
+}
+
+#page-mod-assign-grading .gradingtable .c1,
+#page-mod-assign-grading .gradingtable .c6 {
+    display: none;
+}
+
+
+#page-course-view-participants .userlist tbody .c1 > a,
+#page-mod-assign-grading .gradingtable tbody .c2 > a,
+#page-grade-report-grader-index #user-grades tbody .c0 > a,
+#page-mod-quiz-report #attempts tbody .c2 > a:first-child,
+#page-mod-quiz-report #responses tbody .c2 > a:first-child {
+    cursor: default;
+    pointer-events: none;        
+    text-decoration: none;
+    font-weight: normal;
+    color: black;
+}
