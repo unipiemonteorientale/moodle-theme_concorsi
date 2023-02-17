@@ -17,20 +17,21 @@
 /**
  * Concorsi.
  *
- * @package    theme_concorsi
- * @copyright  2023 Roberto Pinna
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   theme_concorsi
+ * @copyright 2023 UPO www.uniupo.it
+ * @author    Roberto Pinna
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'theme_concorsi';
 
-$plugin->version   = 2023011800;
-$plugin->release = '0.5';
-$plugin->maturity = MATURITY_ALPHA;
+$plugin->version = 2023021500;
+$plugin->release = '0.8';
+$plugin->maturity = MATURITY_BETA;
 
-$plugin->requires  = 2022111800;
+$plugin->requires = 2022111800;
 $plugin->dependencies = [
     'theme_boost' => 2022112800
 ];

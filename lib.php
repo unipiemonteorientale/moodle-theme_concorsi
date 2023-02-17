@@ -18,7 +18,8 @@
  * Concorsi theme callbacks..
  *
  * @package   theme_concorsi
- * @copyright 2023 Roberto Pinna
+ * @copyright 2023 UPO www.uniupo.it
+ * @author    Roberto Pinna
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

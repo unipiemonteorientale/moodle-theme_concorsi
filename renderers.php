@@ -17,9 +17,10 @@
 /**
  * Concorsi theme renderable overrides.
  *
- * @package    theme_concorsi
- * @copyright  2023 Roberto Pinna
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   theme_concorsi
+ * @copyright 2023 UPO www.uniupo.it
+ * @author    Roberto Pinna
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
@@ -30,11 +31,91 @@ require_once($CFG->dirroot . '/question/engine/renderer.php');
 /**
  * Quiz renderable.
  *
- * @package    theme_concorsi
- * @copyright  2023 Roberto Pinna
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   theme_concorsi
+ * @copyright 2023 UPO www.uniupo.it
+ * @author    Roberto Pinna
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
+    /**
+     * Builds the review page
+     *
+     * @param quiz_attempt $attemptobj an instance of quiz_attempt.
+     * @param array $slots an array of intgers relating to questions.
+     * @param int $page the current page number
+     * @param bool $showall whether to show entire attempt on one page.
+     * @param bool $lastpage if true the current page is the last page.
+     * @param mod_quiz_display_options $displayoptions instance of mod_quiz_display_options.
+     * @param array $summarydata contains all table data
+     * @return $output containing html data.
+     */
+    public function review_page(quiz_attempt $attemptobj, $slots, $page, $showall,
+                                $lastpage, mod_quiz_display_options $displayoptions,
+                                $summarydata) {
+        global $CFG, $USER;
+
+        $content = '';
+        $content .= $this->review_summary_table($summarydata, $page);
+        $content .= $this->review_form($page, $showall, $displayoptions,
+                $this->questions($attemptobj, true, $slots, $page, $showall, $displayoptions),
+                $attemptobj);
+
+        $filehash = '';
+        if ($USER->id == $attemptobj->get_userid()) {
+            $attemptid = $attemptobj->get_attemptid();
+            $context = context_module::instance($attemptobj->get_cmid());
+            $component = 'quiz_concorsi';
+            $filearea = 'quiz_reviews';
+            $itemid = $attemptobj->get_quizid();
+            $filename = clean_param(fullname($USER) . '-' . $attemptid . '.pdf', PARAM_FILE);
+
+            $fileinfo = [
+                'contextid' => $context->id,
+                'component' => $component,
+                'filearea' => $filearea,
+                'itemid' => $itemid,
+                'filepath' => '/',
+                'filename' => $filename,
+            ];
+            $fs = get_file_storage();
+
+            if (!$fs->file_exists($context->id, $component, $filearea, $itemid, '/', $filename)) {
+                $tempdir = make_temp_directory('core_plugin/quiz_concorsi') . '/';
+                $filepath = $tempdir . $filename;
+
+                require_once($CFG->libdir . '/pdflib.php');
+                $doc = new pdf;
+                $doc->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
+                $doc->setPrintHeader(false);
+                $doc->setPrintFooter(false);
+                $doc->AddPage();
+                $doc->writeHTML($content, true, false, true, false, '');
+                $doc->lastPage();
+
+                $doc->Output($filepath, 'F');
+
+                $fs->create_file_from_pathname($fileinfo, $filepath);
+            }
+
+            $file = $fs->get_file($context->id, $component, $filearea, $itemid, '/', $filename);
+            if (!empty($file)) {
+                $filehash = $file->get_contenthash();
+            }
+        }
+
+        $output = '';
+        $output .= $this->header();
+        $output .= $content;
+
+        if (!empty($filehash)) {
+            $output .= html_writer::tag('div', get_string('filehash', 'theme_concorsi', $filehash), array('class' => 'filehash'));
+        }
+
+        $output .= $this->review_next_navigation($attemptobj, $page, $lastpage, $showall);
+        $output .= $this->footer();
+
+        return $output;
+    }
 
     /**
      * Filters the summarydata array and anonymize user data and times.
@@ -46,7 +127,7 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
     public function filter_review_summary_table($summarydata, $page) {
         if (isset($summarydata['user'])) {
             $summarydata['user']['title']->link = '';
-	    $summarydata['user']['content']= $summarydata['user']['content']->text;
+            $summarydata['user']['content'] = $summarydata['user']['content']->text;
         }
 
         if (isset($summarydata['state'])) {
@@ -75,14 +156,48 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
 
         return parent::filter_review_summary_table($summarydata, $page);
     }
+
+    /**
+     * Returns the same as {@link quiz_num_attempt_summary()} but wrapped in a link
+     * to the quiz reports.
+     *
+     * @param stdClass $quiz the quiz object. Only $quiz->id is used at the moment.
+     * @param stdClass $cm the cm object. Only $cm->course, $cm->groupmode and $cm->groupingid
+     * fields are used at the moment.
+     * @param context $context the quiz context.
+     * @param bool $returnzero if false (default), when no attempts have been made '' is returned
+     *      instead of 'Attempts: 0'.
+     * @param int $currentgroup if there is a concept of current group where this method is being
+     *      called (e.g. a report) pass it in here. Default 0 which means no current group.
+     * @return string HTML fragment for the link.
+     */
+    public function quiz_attempt_summary_link_to_reports($quiz, $cm, $context,
+                                                          $returnzero = false, $currentgroup = 0) {
+        global $CFG;
+
+        if (!empty($quiz->timeclose) && ($quiz->timeclose < time())) {
+            $summary = quiz_num_attempt_summary($quiz, $cm, $returnzero, $currentgroup);
+            if (!$summary) {
+                return '';
+            }
+    
+            require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
+            $url = new moodle_url('/mod/quiz/report.php', array(
+                    'id' => $cm->id, 'mode' => quiz_report_default_report($context)));
+            return html_writer::link($url, $summary);
+       }
+
+       return '';
+    }
 }
 
 /**
  * Question renderable.
  *
- * @package    theme_concorsi
- * @copyright  2023 Roberto Pinna
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   theme_concorsi
+ * @copyright 2023 UPO www.uniupo.it
+ * @author    Roberto Pinna
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class theme_concorsi_core_question_renderer extends core_question_renderer {
     /**

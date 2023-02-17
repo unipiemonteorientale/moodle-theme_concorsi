@@ -18,7 +18,8 @@
  * Language file.
  *
  * @package   theme_concorsi
- * @copyright 2023 Roberto Pinna
+ * @copyright 2023 UPO www.uniupo.it
+ * @author    Roberto Pinna
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -58,6 +59,7 @@ $string['privacy:drawerindexclosed'] = 'The current preference for the index dra
 $string['privacy:drawerindexopen'] = 'The current preference for the index drawer is open.';
 $string['privacy:drawerblockclosed'] = 'The current preference for the block drawer is closed.';
 $string['privacy:drawerblockopen'] = 'The current preference for the block drawer is open.';
+$string['filehash'] = 'File hash: {$a}';
 
 // Deprecated since Moodle 4.0.
 $string['totop'] = 'Go to top';

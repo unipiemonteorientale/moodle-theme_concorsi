@@ -19,7 +19,8 @@
  *
  * @package   theme_concorsi
  * @copyright 2016 Ryan Wyllie (for theme Boost)
- * @copyright 2023 Roberto Pinna
+ * @copyright 2023 UPO www.uniupo.it
+ * @author    Roberto Pinna
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -34,7 +35,11 @@ if ($ADMIN->fulltree) {
     // Administration, Navigation, Courses and Section links.
     $default = 'navigation,settings,course_list,section_links';
     $setting = new admin_setting_configtext('theme_concorsi/unaddableblocks',
-        get_string('unaddableblocks', 'theme_concorsi'), get_string('unaddableblocks_desc', 'theme_concorsi'), $default, PARAM_TEXT);
+        get_string('unaddableblocks', 'theme_concorsi'),
+        get_string('unaddableblocks_desc', 'theme_concorsi'),
+        $default,
+        PARAM_TEXT
+    );
     $page->add($setting);
 
     // Preset.
