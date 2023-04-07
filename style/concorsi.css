@@ -1,13 +1,13 @@
 #page-mod-quiz-report #attempts .c1,
-#page-mod-quiz-report #attempts .c3,
 #page-mod-quiz-report #attempts .c4,
 #page-mod-quiz-report #attempts .c5,
-#page-mod-quiz-report #attempts .c6 {
+#page-mod-quiz-report #attempts .c6, 
+#page-mod-quiz-report #attempts .c7 {
     display: none;
 }
 
 #page-mod-quiz-report #responses .c1,
-#page-mod-quiz-report #responses .c3 {
+#page-mod-quiz-report #responses .c4 {
     display: none;
 }
 
