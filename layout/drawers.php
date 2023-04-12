@@ -19,7 +19,7 @@
  *
  * @package   theme_concorsi
  * @copyright 2021 Bas Brands
- * @copyright 2023 UPO <https://www.uniupo.it>
+ * @copyright 2023 UPO www.uniupo.it
  * @author    Roberto Pinna
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
