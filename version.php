@@ -27,9 +27,9 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'theme_concorsi';
 
-$plugin->version = 2023021500;
-$plugin->release = '0.8';
-$plugin->maturity = MATURITY_BETA;
+$plugin->version = 2023050500;
+$plugin->release = '1.0';
+$plugin->maturity = MATURITY_STABLE;
 
 $plugin->requires = 2022111800;
 $plugin->dependencies = [

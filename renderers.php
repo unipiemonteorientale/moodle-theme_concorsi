@@ -52,22 +52,38 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
     public function review_page(quiz_attempt $attemptobj, $slots, $page, $showall,
                                 $lastpage, mod_quiz_display_options $displayoptions,
                                 $summarydata) {
-        global $CFG, $USER;
-
-        $content = '';
-        $content .= $this->review_summary_table($summarydata, $page);
-        $content .= $this->review_form($page, $showall, $displayoptions,
-                $this->questions($attemptobj, true, $slots, $page, $showall, $displayoptions),
-                $attemptobj);
+        global $CFG, $USER, $DB;
 
         $filehash = '';
-        if ($USER->id == $attemptobj->get_userid()) {
+        if (($USER->id == $attemptobj->get_userid()) && !$attemptobj->is_preview()) {
+            $config = get_config('theme_concorsi');
             $attemptid = $attemptobj->get_attemptid();
+
+            if (!isset($config->cryptkey)) {
+                $digits = range(0, 9);
+                shuffle($digits);
+                $config->crypkey = implode(',', $digits);
+                set_config('cryptkey', $config->crypkey, 'theme_concorsi'); 
+            }
+
+            if (isset($config->anonymizedates) && !empty($config->anonymizedates)) {
+                $attempt = $DB->get_record('quiz_attempts', array('id' => $attemptid));
+                if ($config->anonymizedates == 1) {
+                    $attempt->timestart = 0;
+                    $attempt->timefinish = 0;
+                } else if ($config->anonymizedates == 2) {
+                    $quiz = $attemptobj->get_quiz();
+                    $attempt->timestart = $quiz->timeopen;
+                    $attempt->timefinish = $quiz->timeopen;
+                }
+                $DB->update_record('quiz_attempts', $attempt);
+                
+            }
             $context = context_module::instance($attemptobj->get_cmid());
             $component = 'quiz_concorsi';
             $filearea = 'quiz_reviews';
             $itemid = $attemptobj->get_quizid();
-            $filename = clean_param(fullname($USER) . '-' . $attemptid . '.pdf', PARAM_FILE);
+            $filename = clean_param(fullname($USER) . '-' . str_pad($USER->idnumber, 8, '0', STR_PAD_LEFT) . '.pdf', PARAM_FILE);
 
             $fileinfo = [
                 'contextid' => $context->id,
@@ -77,19 +93,61 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
                 'filepath' => '/',
                 'filename' => $filename,
             ];
-            $fs = get_file_storage();
 
+            $fs = get_file_storage();
             if (!$fs->file_exists($context->id, $component, $filearea, $itemid, '/', $filename)) {
+
+                $content = '<style>';
+                $content .= 'div.info { display:none; }';
+                $content .= 'h3.no { margin-bottom: .5em;} h4.sr-only { line-height: 1em; }';
+                $content .= 'div.que { border-bottom: thin solid black; padding-bottom: 1em; }';
+                $content .= '.answer div input, .answer div div, .answer div p { display: inline; margin: 0 0.1em; }';
+                $content .= '.qtype_essay_editor.qtype_essay_response.readonly { min-height: auto !important; }';
+                $content .= '</style>';
+
+                $slots = $attemptobj->get_slots();
+                $displayoptions = $attemptobj->get_display_options(true);
+
+                foreach ($slots as $slot) {
+                    $originalslot = $attemptobj->get_original_slot($slot);
+                    $number = $attemptobj->get_question_number($originalslot);
+                    //$displayoptions = $attemptobj->get_display_options_with_edit_link(true, $slot, "");
+                    $displayoptions->marks = 0;
+                    $displayoptions->manualcomment = 0;
+                    $displayoptions->feedback = 0;
+                    $displayoptions->correctness = 0;
+                    $displayoptions->numpartscorrect = 0;
+                    $displayoptions->history = 0;
+                    $displayoptions->flags = 0;
+                    $displayoptions->manualcommentlink = 0;
+
+                    if ($slot != $originalslot) {
+                        $attemptobj->get_question_attempt($slot)->set_max_mark(
+                            $attemptobj->get_question_attempt($originalslot)->get_max_mark());
+                    }
+                    $quba = question_engine::load_questions_usage_by_activity($attemptobj->get_uniqueid());
+                    $content .= $quba->render_question($slot, $displayoptions, $number);
+                }
+
                 $tempdir = make_temp_directory('core_plugin/quiz_concorsi') . '/';
                 $filepath = $tempdir . $filename;
 
                 require_once($CFG->libdir . '/pdflib.php');
                 $doc = new pdf;
                 $doc->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
-                $doc->setPrintHeader(false);
-                $doc->setPrintFooter(false);
+                $userdata = ' - ' . get_string('idnumber') . ': ' . $USER->idnumber;
+                if (isset($config->usernamehash) && !empty($config->usernamehash) && isset($config->cryptkey)) {
+                    $userdata .= ' - '. sha1($config->cryptkey.$USER->username);
+                }
+                $doc->SetHeaderData(null, null, null, fullname($USER) . $userdata);
+                $doc->SetFooterData(array(0, 0, 0), array(0, 0, 0));
+
+                $doc->SetTopMargin(18);
+                $doc->SetHeaderMargin(PDF_MARGIN_HEADER);
+                $doc->SetFooterMargin(PDF_MARGIN_FOOTER);
+
                 $doc->AddPage();
-                $doc->writeHTML($content, true, false, true, false, '');
+                $doc->writeHTML($content);
                 $doc->lastPage();
 
                 $doc->Output($filepath, 'F');
@@ -105,7 +163,10 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
 
         $output = '';
         $output .= $this->header();
-        $output .= $content;
+        $output .= $this->review_summary_table($summarydata, $page);
+        $output .= $this->review_form($page, $showall, $displayoptions,
+                $this->questions($attemptobj, true, $slots, $page, $showall, $displayoptions),
+                $attemptobj);
 
         if (!empty($filehash)) {
             $output .= html_writer::tag('div', get_string('filehash', 'theme_concorsi', $filehash), array('class' => 'filehash'));
@@ -126,8 +187,12 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
      */
     public function filter_review_summary_table($summarydata, $page) {
         if (isset($summarydata['user'])) {
-            $summarydata['user']['title']->link = '';
-            $summarydata['user']['content'] = $summarydata['user']['content']->text;
+            if (isset($summarydata['user']['title']->link)) {
+                $summarydata['user']['title']->link = '';
+            }
+            if (isset($summarydata['user']['content']->text)) {
+                $summarydata['user']['content'] = $summarydata['user']['content']->text;
+            }
         }
 
         if (isset($summarydata['state'])) {
@@ -158,15 +223,12 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
     }
 
     /**
-     * Returns the same as {@link quiz_num_attempt_summary()} but wrapped in a link
-     * to the quiz reports.
+     * Returns the same as quiz_num_attempt_summary but wrapped in a link to the quiz reports.
      *
      * @param stdClass $quiz the quiz object. Only $quiz->id is used at the moment.
-     * @param stdClass $cm the cm object. Only $cm->course, $cm->groupmode and $cm->groupingid
-     * fields are used at the moment.
+     * @param stdClass $cm the cm object. Only $cm->course, $cm->groupmode and $cm->groupingid fields are used at the moment.
      * @param context $context the quiz context.
-     * @param bool $returnzero if false (default), when no attempts have been made '' is returned
-     *      instead of 'Attempts: 0'.
+     * @param bool $returnzero if false (default), when no attempts have been made '' is returned instead of 'Attempts: 0'.
      * @param int $currentgroup if there is a concept of current group where this method is being
      *      called (e.g. a report) pass it in here. Default 0 which means no current group.
      * @return string HTML fragment for the link.
@@ -180,14 +242,13 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
             if (!$summary) {
                 return '';
             }
-    
+
             require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
             $url = new moodle_url('/mod/quiz/report.php', array(
                     'id' => $cm->id, 'mode' => quiz_report_default_report($context)));
             return html_writer::link($url, $summary);
-       }
-
-       return '';
+        }
+        return '';
     }
 }
 
