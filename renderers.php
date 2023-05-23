@@ -63,7 +63,7 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
                 $digits = range(0, 9);
                 shuffle($digits);
                 $config->crypkey = implode(',', $digits);
-                set_config('cryptkey', $config->crypkey, 'theme_concorsi'); 
+                set_config('cryptkey', $config->crypkey, 'theme_concorsi');
             }
 
             if (isset($config->anonymizedates) && !empty($config->anonymizedates)) {
@@ -77,56 +77,33 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
                     $attempt->timefinish = $quiz->timeopen;
                 }
                 $DB->update_record('quiz_attempts', $attempt);
-                
             }
             $context = context_module::instance($attemptobj->get_cmid());
             $component = 'quiz_concorsi';
             $filearea = 'quiz_reviews';
             $itemid = $attemptobj->get_quizid();
-            $filename = clean_param(fullname($USER) . '-' . str_pad($USER->idnumber, 8, '0', STR_PAD_LEFT) . '.pdf', PARAM_FILE);
-
-            $fileinfo = [
-                'contextid' => $context->id,
-                'component' => $component,
-                'filearea' => $filearea,
-                'itemid' => $itemid,
-                'filepath' => '/',
-                'filename' => $filename,
-            ];
+            $idnumber = str_pad($USER->idnumber, 6, '0', STR_PAD_LEFT);
+            $filename = clean_param(fullname($USER) . '-' . $idnumber . '.pdf', PARAM_FILE);
 
             $fs = get_file_storage();
+            if ($fs->file_exists($context->id, $component, $filearea, $itemid, '/', $filename)) {
+                // Needed to store multiple attempt pdfs.
+                $filename = clean_param(fullname($USER) . '-' . $idnumber . '-' . $attemptid . '.pdf', PARAM_FILE);
+            }
+
             if (!$fs->file_exists($context->id, $component, $filearea, $itemid, '/', $filename)) {
-
-                $content = '<style>';
-                $content .= 'div.info { display:none; }';
-                $content .= 'h3.no { margin-bottom: .5em;} h4.sr-only { line-height: 1em; }';
-                $content .= 'div.que { border-bottom: thin solid black; padding-bottom: 1em; }';
-                $content .= '.answer div input, .answer div div, .answer div p { display: inline; margin: 0 0.1em; }';
-                $content .= '.qtype_essay_editor.qtype_essay_response.readonly { min-height: auto !important; }';
-                $content .= '</style>';
-
                 $slots = $attemptobj->get_slots();
-                $displayoptions = $attemptobj->get_display_options(true);
-
                 foreach ($slots as $slot) {
                     $originalslot = $attemptobj->get_original_slot($slot);
                     $number = $attemptobj->get_question_number($originalslot);
-                    //$displayoptions = $attemptobj->get_display_options_with_edit_link(true, $slot, "");
-                    $displayoptions->marks = 0;
-                    $displayoptions->manualcomment = 0;
-                    $displayoptions->feedback = 0;
-                    $displayoptions->correctness = 0;
-                    $displayoptions->numpartscorrect = 0;
-                    $displayoptions->history = 0;
-                    $displayoptions->flags = 0;
-                    $displayoptions->manualcommentlink = 0;
 
-                    if ($slot != $originalslot) {
-                        $attemptobj->get_question_attempt($slot)->set_max_mark(
-                            $attemptobj->get_question_attempt($originalslot)->get_max_mark());
-                    }
-                    $quba = question_engine::load_questions_usage_by_activity($attemptobj->get_uniqueid());
-                    $content .= $quba->render_question($slot, $displayoptions, $number);
+                    $qa = $attemptobj->get_question_attempt($slot);
+
+                    $content .= html_writer::tag('<h2>', get_string('questionnumber', 'quiz_concorsi', $number));
+                    $content .= html_writer::tag('<pre>', $qa->get_question_summary());
+                    $content .= html_writer::tag('<h3>', get_string('answer', 'quiz'));
+                    $content .= html_writer::tag('<pre>', $qa->get_response_summary());
+                    $content .= html_writer::empty_tag('<hr>', array());
                 }
 
                 $tempdir = make_temp_directory('core_plugin/quiz_concorsi') . '/';
@@ -151,6 +128,15 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
                 $doc->lastPage();
 
                 $doc->Output($filepath, 'F');
+
+                $fileinfo = [
+                    'contextid' => $context->id,
+                    'component' => $component,
+                    'filearea' => $filearea,
+                    'itemid' => $itemid,
+                    'filepath' => '/',
+                    'filename' => $filename,
+                ];
 
                 $fs->create_file_from_pathname($fileinfo, $filepath);
             }

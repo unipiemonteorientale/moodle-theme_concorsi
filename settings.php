@@ -120,8 +120,8 @@ if ($ADMIN->fulltree) {
 
     // Concorsi settings.
     $page = new admin_settingpage('theme_concorsi_concorsi', get_string('concorsisettings', 'theme_concorsi'));
-  
-    // Anonymize quiz attempts dates. 
+
+    // Anonymize quiz attempts dates.
     $name = 'theme_concorsi/anonymizedates';
     $title = get_string('anonymizedates', 'theme_concorsi');
     $description = get_string('anonymizedates_desc', 'theme_concorsi');
