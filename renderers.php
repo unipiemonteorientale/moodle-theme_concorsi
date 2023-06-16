@@ -36,21 +36,21 @@ require_once($CFG->dirroot . '/question/engine/renderer.php');
  * @author    Roberto Pinna
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class theme_concorsi_mod_quiz_renderer extends mod_quiz_renderer {
+class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
     /**
      * Builds the review page
      *
-     * @param quiz_attempt $attemptobj an instance of quiz_attempt.
+     * @param mod_quiz\quiz_attempt $attemptobj an instance of quiz_attempt.
      * @param array $slots an array of intgers relating to questions.
      * @param int $page the current page number
      * @param bool $showall whether to show entire attempt on one page.
      * @param bool $lastpage if true the current page is the last page.
-     * @param mod_quiz_display_options $displayoptions instance of mod_quiz_display_options.
+     * @param mod_quizi\question\display_options $displayoptions instance of display_options.
      * @param array $summarydata contains all table data
      * @return $output containing html data.
      */
-    public function review_page(quiz_attempt $attemptobj, $slots, $page, $showall,
-                                $lastpage, mod_quiz_display_options $displayoptions,
+    public function review_page(mod_quiz\quiz_attempt $attemptobj, $slots, $page, $showall,
+                                $lastpage, mod_quiz\question\display_options $displayoptions,
                                 $summarydata) {
         global $CFG, $USER, $DB;
 
