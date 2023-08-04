@@ -58,6 +58,7 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
         if (($USER->id == $attemptobj->get_userid()) && !$attemptobj->is_preview()) {
             $config = get_config('theme_concorsi');
             $attemptid = $attemptobj->get_attemptid();
+            $quiz = $attemptobj->get_quiz();
 
             if (!isset($config->cryptkey)) {
                 $digits = range(0, 9);
@@ -72,7 +73,6 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
                     $attempt->timestart = 0;
                     $attempt->timefinish = 0;
                 } else if ($config->anonymizedates == 2) {
-                    $quiz = $attemptobj->get_quiz();
                     $attempt->timestart = $quiz->timeopen;
                     $attempt->timefinish = $quiz->timeopen;
                 }
@@ -83,14 +83,13 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
             $filearea = 'quiz_reviews';
             $itemid = $attemptobj->get_quizid();
             $idnumber = str_pad($USER->idnumber, 6, '0', STR_PAD_LEFT);
-            $filename = clean_param(fullname($USER) . '-' . $idnumber . '.pdf', PARAM_FILE);
-
-            $fs = get_file_storage();
-            if ($fs->file_exists($context->id, $component, $filearea, $itemid, '/', $filename)) {
-                // Needed to store multiple attempt pdfs.
+            if ($quiz->attempts == 1) {
+                $filename = clean_param(fullname($USER) . '-' . $idnumber . '.pdf', PARAM_FILE);
+            } else {
                 $filename = clean_param(fullname($USER) . '-' . $idnumber . '-' . $attemptid . '.pdf', PARAM_FILE);
             }
 
+            $fs = get_file_storage();
             if (!$fs->file_exists($context->id, $component, $filearea, $itemid, '/', $filename)) {
                 $slots = $attemptobj->get_slots();
                 foreach ($slots as $slot) {
