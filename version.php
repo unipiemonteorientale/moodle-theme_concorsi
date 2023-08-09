@@ -32,7 +32,6 @@ $plugin->release = '1.0';
 $plugin->maturity = MATURITY_STABLE;
 
 $plugin->requires = 2022112800;
-$plugin->supported = [401];
 $plugin->dependencies = [
     'theme_boost' => 2022112800
 ];
