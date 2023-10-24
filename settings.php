@@ -147,6 +147,13 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_configselect($name, $title, $description, '0', $yesno);
     $page->add($setting);
 
+    $name = 'theme_concorsi/encryptzipfiles';
+    $title = get_string('encryptzipfiles', 'theme_concorsi');
+    $description = get_string('encryptzipfiles_desc', 'theme_concorsi');
+    $yesno = array(0 => new lang_string('no'), 1 => new lang_string('yes'));
+    $setting = new admin_setting_configselect($name, $title, $description, '0', $yesno);
+    $page->add($setting);
+
     $name = 'theme_concorsi/suspendmode';
     $title = get_string('suspendmode', 'theme_concorsi');
     $description = get_string('suspendmode_desc', 'theme_concorsi');
