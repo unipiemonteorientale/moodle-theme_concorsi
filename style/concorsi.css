@@ -19,6 +19,10 @@
     display: none;
 }
 
+.path-mod-quiz #mod_quiz_navblock .qnbutton.flagged .thispageholder {
+    background: none;
+}
+
 #page-mod-quiz-report .questionflag,
 #page-mod-quiz-reviewquestion .questionflag,
 #page-mod-quiz-comment .questionflag,
