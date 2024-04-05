@@ -5,6 +5,11 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+### Fixed
+- special characters escaping
+
+### Changed
+- show idnumbers in quiz review page
 
 ## 1.1 - 2023-10-24
 ### Added
