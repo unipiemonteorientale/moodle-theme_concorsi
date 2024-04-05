@@ -98,11 +98,11 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
 
                     $qa = $attemptobj->get_question_attempt($slot);
 
-                    $content .= html_writer::tag('<h2>', get_string('questionnumber', 'quiz_concorsi', $number));
-                    $content .= html_writer::tag('<pre>', $qa->get_question_summary());
-                    $content .= html_writer::tag('<h3>', get_string('answer', 'quiz_concorsi'));
-                    $content .= html_writer::tag('<pre>', $qa->get_response_summary());
-                    $content .= html_writer::empty_tag('<hr>', array());
+                    $content .= html_writer::tag('h2', get_string('questionnumber', 'quiz_concorsi', $number));
+                    $content .= html_writer::tag('pre', str_replace(['<', '>'], ['&lt;', '&gt;'],$qa->get_question_summary()));
+                    $content .= html_writer::tag('h3', get_string('answer', 'quiz_concorsi'));
+                    $content .= html_writer::tag('pre', str_replace(['<', '>'], ['&lt;', '&gt;'],$qa->get_response_summary()));
+                    $content .= html_writer::empty_tag('hr', array());
                 }
 
                 $tempdir = make_temp_directory('core_plugin/quiz_concorsi') . '/';
