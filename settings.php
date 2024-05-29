@@ -70,7 +70,7 @@ if ($ADMIN->fulltree) {
     $description = get_string('presetfiles_desc', 'theme_concorsi');
 
     $setting = new admin_setting_configstoredfile($name, $title, $description, 'preset', 0,
-        array('maxfiles' => 20, 'accepted_types' => array('.scss')));
+        ['maxfiles' => 20, 'accepted_types' => ['.scss']]);
     $page->add($setting);
 
     // Background image setting.
@@ -114,54 +114,6 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_scsscode('theme_concorsi/scss', get_string('rawscss', 'theme_concorsi'),
         get_string('rawscss_desc', 'theme_concorsi'), '', PARAM_RAW);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $page->add($setting);
-
-    $settings->add($page);
-
-    // Concorsi settings.
-    $page = new admin_settingpage('theme_concorsi_concorsi', get_string('concorsisettings', 'theme_concorsi'));
-
-    // Anonymize quiz attempts dates.
-    $name = 'theme_concorsi/anonymizedates';
-    $title = get_string('anonymizedates', 'theme_concorsi');
-    $description = get_string('anonymizedates_desc', 'theme_concorsi');
-    $choices = array();
-    $choices[0] = new lang_string('no');
-    $choices[1] = new lang_string('clear', 'theme_concorsi');
-    $choices[2] = new lang_string('coursestartdate', 'theme_concorsi');
-    $setting = new admin_setting_configselect($name, $title, $description, '0', $choices);
-    $page->add($setting);
-
-    // Add hashed username in attempt report pdfs.
-    $name = 'theme_concorsi/usernamehash';
-    $title = get_string('usernamehash', 'theme_concorsi');
-    $description = get_string('usernamehash_desc', 'theme_concorsi');
-    $yesno = array(0 => new lang_string('no'), 1 => new lang_string('yes'));
-    $setting = new admin_setting_configselect($name, $title, $description, '0', $yesno);
-    $page->add($setting);
-
-    $name = 'theme_concorsi/allowrefinalize';
-    $title = get_string('allowrefinalize', 'theme_concorsi');
-    $description = get_string('allowrefinalize_desc', 'theme_concorsi');
-    $yesno = array(0 => new lang_string('no'), 1 => new lang_string('yes'));
-    $setting = new admin_setting_configselect($name, $title, $description, '0', $yesno);
-    $page->add($setting);
-
-    $name = 'theme_concorsi/encryptzipfiles';
-    $title = get_string('encryptzipfiles', 'theme_concorsi');
-    $description = get_string('encryptzipfiles_desc', 'theme_concorsi');
-    $yesno = array(0 => new lang_string('no'), 1 => new lang_string('yes'));
-    $setting = new admin_setting_configselect($name, $title, $description, '0', $yesno);
-    $page->add($setting);
-
-    $name = 'theme_concorsi/suspendmode';
-    $title = get_string('suspendmode', 'theme_concorsi');
-    $description = get_string('suspendmode_desc', 'theme_concorsi');
-    $choices = array();
-    $choices[0] = new lang_string('none');
-    $choices[1] = new lang_string('enrolled', 'theme_concorsi');
-    $choices[2] = new lang_string('attempted', 'theme_concorsi');
-    $setting = new admin_setting_configselect($name, $title, $description, '1', $choices);
     $page->add($setting);
 
     $settings->add($page);

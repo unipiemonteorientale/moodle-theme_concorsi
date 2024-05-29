@@ -45,43 +45,25 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
      * @param int $page the current page number
      * @param bool $showall whether to show entire attempt on one page.
      * @param bool $lastpage if true the current page is the last page.
-     * @param mod_quizi\question\display_options $displayoptions instance of display_options.
+     * @param mod_quiz\question\display_options $displayoptions instance of display_options.
      * @param array $summarydata contains all table data
      * @return $output containing html data.
      */
     public function review_page(mod_quiz\quiz_attempt $attemptobj, $slots, $page, $showall,
                                 $lastpage, mod_quiz\question\display_options $displayoptions,
                                 $summarydata) {
-        global $CFG, $USER, $DB;
+        global $USER;
 
         $filehash = '';
         if (($USER->id == $attemptobj->get_userid()) && !$attemptobj->is_preview()) {
-            $config = get_config('theme_concorsi');
             $attemptid = $attemptobj->get_attemptid();
             $quiz = $attemptobj->get_quiz();
 
-            if (!isset($config->cryptkey)) {
-                $digits = range(0, 9);
-                shuffle($digits);
-                $config->crypkey = implode(',', $digits);
-                set_config('cryptkey', $config->crypkey, 'theme_concorsi');
-            }
-
-            if (isset($config->anonymizedates) && !empty($config->anonymizedates)) {
-                $attempt = $DB->get_record('quiz_attempts', array('id' => $attemptid));
-                if ($config->anonymizedates == 1) {
-                    $attempt->timestart = 0;
-                    $attempt->timefinish = 0;
-                } else if ($config->anonymizedates == 2) {
-                    $attempt->timestart = $quiz->timeopen;
-                    $attempt->timefinish = $quiz->timeopen;
-                }
-                $DB->update_record('quiz_attempts', $attempt);
-            }
             $context = context_module::instance($attemptobj->get_cmid());
             $component = 'quiz_concorsi';
             $filearea = 'quiz_reviews';
-            $itemid = $attemptobj->get_quizid();
+            $itemid = $quiz->id;
+
             $idnumber = str_pad($USER->idnumber, 6, '0', STR_PAD_LEFT);
             if ($quiz->attempts == 1) {
                 $filename = clean_param(fullname($USER) . '-' . $idnumber . '.pdf', PARAM_FILE);
@@ -90,56 +72,6 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
             }
 
             $fs = get_file_storage();
-            if (!$fs->file_exists($context->id, $component, $filearea, $itemid, '/', $filename)) {
-                $slots = $attemptobj->get_slots();
-                foreach ($slots as $slot) {
-                    $originalslot = $attemptobj->get_original_slot($slot);
-                    $number = $attemptobj->get_question_number($originalslot);
-
-                    $qa = $attemptobj->get_question_attempt($slot);
-
-                    $content .= html_writer::tag('h2', get_string('questionnumber', 'quiz_concorsi', $number));
-                    $content .= html_writer::tag('pre', str_replace(['<', '>'], ['&lt;', '&gt;'],$qa->get_question_summary()));
-                    $content .= html_writer::tag('h3', get_string('answer', 'quiz_concorsi'));
-                    $content .= html_writer::tag('pre', str_replace(['<', '>'], ['&lt;', '&gt;'],$qa->get_response_summary()));
-                    $content .= html_writer::empty_tag('hr', array());
-                }
-
-                $tempdir = make_temp_directory('core_plugin/quiz_concorsi') . '/';
-                $filepath = $tempdir . $filename;
-
-                require_once($CFG->libdir . '/pdflib.php');
-                $doc = new pdf;
-                $doc->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
-                $userdata = ' - ' . get_string('idnumber') . ': ' . $USER->idnumber;
-                if (isset($config->usernamehash) && !empty($config->usernamehash) && isset($config->cryptkey)) {
-                    $userdata .= ' - '. sha1($config->cryptkey.$USER->username);
-                }
-                $doc->SetHeaderData(null, null, null, fullname($USER) . $userdata);
-                $doc->SetFooterData(array(0, 0, 0), array(0, 0, 0));
-
-                $doc->SetTopMargin(18);
-                $doc->SetHeaderMargin(PDF_MARGIN_HEADER);
-                $doc->SetFooterMargin(PDF_MARGIN_FOOTER);
-
-                $doc->AddPage();
-                $doc->writeHTML($content);
-                $doc->lastPage();
-
-                $doc->Output($filepath, 'F');
-
-                $fileinfo = [
-                    'contextid' => $context->id,
-                    'component' => $component,
-                    'filearea' => $filearea,
-                    'itemid' => $itemid,
-                    'filepath' => '/',
-                    'filename' => $filename,
-                ];
-
-                $fs->create_file_from_pathname($fileinfo, $filepath);
-            }
-
             $file = $fs->get_file($context->id, $component, $filearea, $itemid, '/', $filename);
             if (!empty($file)) {
                 $filehash = $file->get_contenthash();
@@ -154,7 +86,7 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
                 $attemptobj);
 
         if (!empty($filehash)) {
-            $output .= html_writer::tag('div', get_string('filehash', 'theme_concorsi', $filehash), array('class' => 'filehash'));
+            $output .= html_writer::tag('div', get_string('filehash', 'theme_concorsi', $filehash), ['class' => 'filehash']);
         }
 
         $output .= $this->review_next_navigation($attemptobj, $page, $lastpage, $showall);
@@ -233,8 +165,7 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
             }
 
             require_once($CFG->dirroot . '/mod/quiz/report/reportlib.php');
-            $url = new moodle_url('/mod/quiz/report.php', array(
-                    'id' => $cm->id, 'mode' => quiz_report_default_report($context)));
+            $url = new moodle_url('/mod/quiz/report.php', ['id' => $cm->id, 'mode' => quiz_report_default_report($context)]);
             return html_writer::link($url, $summary);
         }
         return '';

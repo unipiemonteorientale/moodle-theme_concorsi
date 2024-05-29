@@ -27,11 +27,11 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'theme_concorsi';
 
-$plugin->version = 2023102400;
-$plugin->release = '1.1';
+$plugin->version = 2024052700;
+$plugin->release = '1.2';
 $plugin->maturity = MATURITY_STABLE;
 
 $plugin->requires = 2023042400;
 $plugin->dependencies = [
-    'theme_boost' => 2022112800
+    'theme_boost' => 2022112800,
 ];

@@ -62,21 +62,6 @@ $string['privacy:drawerblockopen'] = 'The current preference for the block drawe
 
 // Concorsi additional strings.
 $string['filehash'] = 'File hash: {$a}';
-$string['concorsisettings'] = 'Concorsi settings';
-$string['clear'] = 'Clear';
-$string['coursestartdate'] = 'Set at course start date';
-$string['anonymizedates'] = 'Anonymize attempt dates';
-$string['anonymizedates_desc'] = 'When enabled all quiz attempts timestamp will be cleared or set to the course start date in order to anonymize as much as possible user activity';
-$string['usernamehash'] = 'Add hashed usernames in attempt report pdf';
-$string['usernamehash_desc'] = 'When enabled all quiz attempt reports pdf will include the hashed username. This could be useful to prevent report repudiation';
-$string['allowrefinalize'] = 'Refinalize';
-$string['allowrefinalize_desc'] = 'When enabled, enabled users can finalize more than once public exams. This could limit anonynity of candidates';
-$string['encryptzipfiles'] = 'Encrypt zip files';
-$string['encryptzipfiles_desc'] = 'When enabled, a password will be asked to encrypt zip files';
-$string['suspendmode'] = 'Suspend mode';
-$string['suspendmode_desc'] = 'Candidate user will be suspended on quiz closing. You can choose if suspend all course enrolled candidates or only ones that attempt quizzes';
-$string['attempted'] = 'Only candidates that attempted quiz';
-$string['enrolled'] = 'All course enrolled candidates';
 
 // Deprecated since Moodle 4.0.
 $string['totop'] = 'Go to top';
