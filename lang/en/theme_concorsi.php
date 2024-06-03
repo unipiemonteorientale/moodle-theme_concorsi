@@ -62,6 +62,7 @@ $string['privacy:drawerblockopen'] = 'The current preference for the block drawe
 
 // Concorsi additional strings.
 $string['filehash'] = 'File hash: {$a}';
+$string['reporthash'] = 'Report file hash';
 
 // Deprecated since Moodle 4.0.
 $string['totop'] = 'Go to top';

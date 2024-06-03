@@ -96,6 +96,163 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
     }
 
     /**
+     * Generates the table of data
+     *
+     * @param stdClass $quiz the quiz settings.
+     * @param context_module $context the quiz context.
+     * @param view_page $viewobj
+     */
+    public function view_table($quiz, $context, $viewobj) {
+        global $USER;
+
+        if (!$viewobj->attempts) {
+            return '';
+        }
+
+        // Prepare table header.
+        $table = new html_table();
+        $table->attributes['class'] = 'generaltable quizattemptsummary';
+        $table->caption = get_string('summaryofattempts', 'quiz');
+        $table->captionhide = true;
+        $table->head = [];
+        $table->align = [];
+        $table->size = [];
+        if ($viewobj->attemptcolumn) {
+            $table->head[] = get_string('attemptnumber', 'quiz');
+            $table->align[] = 'center';
+            $table->size[] = '';
+        }
+        $table->head[] = get_string('attemptstate', 'quiz');
+        $table->align[] = 'left';
+        $table->size[] = '';
+        if ($viewobj->markcolumn) {
+            $table->head[] = get_string('marks', 'quiz') . ' / ' .
+                    quiz_format_grade($quiz, $quiz->sumgrades);
+            $table->align[] = 'center';
+            $table->size[] = '';
+        }
+        if ($viewobj->gradecolumn) {
+            $table->head[] = get_string('gradenoun') . ' / ' .
+                    quiz_format_grade($quiz, $quiz->grade);
+            $table->align[] = 'center';
+            $table->size[] = '';
+        }
+        if ($viewobj->canreviewmine) {
+            $table->head[] = get_string('review', 'quiz');
+            $table->align[] = 'center';
+            $table->size[] = '';
+        }
+        if ($viewobj->feedbackcolumn) {
+            $table->head[] = get_string('feedback', 'quiz');
+            $table->align[] = 'left';
+            $table->size[] = '';
+        }
+        $table->head[] = get_string('reporthash', 'theme_concorsi');
+        $table->align[] = 'center';
+        $table->size[] = '';
+
+        // One row for each attempt.
+        foreach ($viewobj->attemptobjs as $attemptobj) {
+            $attemptoptions = $attemptobj->get_display_options(true);
+            $row = [];
+
+            // Add the attempt number.
+            if ($viewobj->attemptcolumn) {
+                if ($attemptobj->is_preview()) {
+                    $row[] = get_string('preview', 'quiz');
+                } else {
+                    $row[] = $attemptobj->get_attempt_number();
+                }
+            }
+
+            $row[] = $this->attempt_state($attemptobj);
+
+            if ($viewobj->markcolumn) {
+                if ($attemptoptions->marks >= question_display_options::MARK_AND_MAX &&
+                        $attemptobj->is_finished()) {
+                    $row[] = quiz_format_grade($quiz, $attemptobj->get_sum_marks());
+                } else {
+                    $row[] = '';
+                }
+            }
+
+            // Outside the if because we may be showing feedback but not grades.
+            $attemptgrade = quiz_rescale_grade($attemptobj->get_sum_marks(), $quiz, false);
+
+            if ($viewobj->gradecolumn) {
+                if ($attemptoptions->marks >= question_display_options::MARK_AND_MAX &&
+                        $attemptobj->is_finished()) {
+
+                    // Highlight the highest grade if appropriate.
+                    if ($viewobj->overallstats && !$attemptobj->is_preview()
+                            && $viewobj->numattempts > 1 && !is_null($viewobj->mygrade)
+                            && $attemptobj->get_state() == quiz_attempt::FINISHED
+                            && $attemptgrade == $viewobj->mygrade
+                            && $quiz->grademethod == QUIZ_GRADEHIGHEST) {
+                        $table->rowclasses[$attemptobj->get_attempt_number()] = 'bestrow';
+                    }
+
+                    $row[] = quiz_format_grade($quiz, $attemptgrade);
+                } else {
+                    $row[] = '';
+                }
+            }
+
+            if ($viewobj->canreviewmine) {
+                $row[] = $viewobj->accessmanager->make_review_link($attemptobj->get_attempt(),
+                        $attemptoptions, $this);
+            }
+
+            if ($viewobj->feedbackcolumn && $attemptobj->is_finished()) {
+                if ($attemptoptions->overallfeedback) {
+                    $row[] = quiz_feedback_for_grade($attemptgrade, $quiz, $context);
+                } else {
+                    $row[] = '';
+                }
+            }
+
+            if ($attemptobj->is_finished()) {
+                $filehash = '';
+                if (($USER->id == $attemptobj->get_userid()) && !$attemptobj->is_preview()) {
+                    $attemptid = $attemptobj->get_attemptid();
+                    $quiz = $attemptobj->get_quiz();
+
+                    $context = context_module::instance($attemptobj->get_cmid());
+                    $component = 'quiz_concorsi';
+                    $filearea = 'quiz_reviews';
+                    $itemid = $quiz->id;
+
+                    $idnumber = str_pad($USER->idnumber, 6, '0', STR_PAD_LEFT);
+                    if ($quiz->attempts == 1) {
+                        $filename = clean_param(fullname($USER) . '-' . $idnumber . '.pdf', PARAM_FILE);
+                    } else {
+                        $filename = clean_param(fullname($USER) . '-' . $idnumber . '-' . $attemptid . '.pdf', PARAM_FILE);
+                    }
+
+                    $fs = get_file_storage();
+                    $file = $fs->get_file($context->id, $component, $filearea, $itemid, '/', $filename);
+                    if (!empty($file)) {
+                        $filehash = $file->get_contenthash();
+                    }
+                }
+
+                $row[] = $filehash;
+            }
+
+            if ($attemptobj->is_preview()) {
+                $table->data['preview'] = $row;
+            } else {
+                $table->data[$attemptobj->get_attempt_number()] = $row;
+            }
+        } // End of loop over attempts.
+
+        $output = '';
+        $output .= $this->view_table_heading();
+        $output .= html_writer::table($table);
+        return $output;
+    }
+
+    /**
      * Filters the summarydata array and anonymize user data and times.
      *
      * @param array $summarydata contains row data for table
