@@ -261,15 +261,15 @@ class theme_concorsi_mod_quiz_renderer extends mod_quiz\output\renderer {
      */
     public function filter_review_summary_table($summarydata, $page) {
         if (isset($summarydata['user'])) {
-            $userid = '';
+            $idnumber = '';
             if (isset($summarydata['user']['title'])) {
-                if (isset($summarydata['user']['title']->user->id)) {
-                    $userid = $summarydata['user']['title']->user->id;
+                if (isset($summarydata['user']['title']->user->idnumber)) {
+                    $idnumber = $summarydata['user']['title']->user->idnumber;
                 }
                 $summarydata['user']['title'] = get_string('idnumber');
             }
             if (isset($summarydata['user']['content']->text)) {
-                $summarydata['user']['content'] = $userid;
+                $summarydata['user']['content'] = $idnumber;
             }
         }
 
